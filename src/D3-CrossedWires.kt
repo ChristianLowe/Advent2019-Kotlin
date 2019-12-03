@@ -39,6 +39,13 @@ class Segment(private val from: Point, private val to: Point, private val direct
         Direction.LEFT -> point.second == from.second && point.first in (to.first .. from.first)
         Direction.RIGHT -> point.second == from.second && point.first in (from.first .. to.first)
     }
+
+    fun intervalMagnitude(point: Point) = when (direction) {
+        Direction.UP -> to.second - point.second
+        Direction.DOWN -> point.second - to.second
+        Direction.LEFT -> point.first - to.first
+        Direction.RIGHT -> to.first - point.first
+    }
 }
 
 
@@ -79,5 +86,42 @@ private fun part1() {
 }
 
 private fun part2() {
+    val distances = mutableListOf<Int>()
+    val lineA = inputD3.lines()[0].split(',')
+    val lineB = inputD3.lines()[1].split(',')
 
+    var currentLocation = Point(0, 0)
+    var totalDistanceA = 0
+    for (opA in lineA) {
+        val distance = opA.substring(1).toInt()
+        val direction = Direction.from(opA[0])
+
+        val nextLocation = currentLocation.travel(distance, direction)
+        val segment = Segment(currentLocation, nextLocation, direction)
+        totalDistanceA += distance
+
+        var locationB = Point(0, 0)
+        var totalDistanceB = 0
+        for (opB in lineB) {
+            var distanceB = opB.substring(1).toInt()
+            val directionB = Direction.from(opB[0])
+
+            while (distanceB != 0) {
+                locationB = locationB.travel(1, directionB)
+                totalDistanceB++
+
+                if (segment.intersects(locationB)) {
+                    val comboDistance = totalDistanceA - segment.intervalMagnitude(locationB) + totalDistanceB
+                    distances.add(comboDistance)
+                }
+
+                distanceB--
+            }
+        }
+
+        currentLocation = nextLocation
+    }
+
+    val result = distances.min()
+    println(result)
 }
